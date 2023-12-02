@@ -6,15 +6,25 @@ from torchtext.data import get_tokenizer
 from torchtext import transforms as T
 from torchtext.vocab import build_vocab_from_iterator
 from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader
 
-def load_data():
+def load_data(batch_size):
     reviews_train, labels_train = read_imdb(is_train=True)
     reviews_test, labels_test = read_imdb(is_train=False)
     vocab = build_vocab_from_iterator(reviews_train, min_freq=20, specials=['<pad>', '<unk>', '<cls>', '<sep>'])
     vocab.set_default_index(vocab['<unk>'])
     train_data = build_dataset(reviews_train, labels_train, vocab)
     test_data = build_dataset(reviews_test, labels_test, vocab)
-    return train_data, test_data, vocab
+
+    # 将数据集分割成训练集和验证集
+    train_size = int(0.8 * len(train_data))
+    valid_size = len(train_data) - train_size
+    train_data, valid_data = torch.utils.data.random_split(train_data, [train_size, valid_size])
+
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
+    return train_loader, valid_loader, test_loader, vocab
 
 def build_dataset(reviews, labels, vocab, max_len=500):
     text_transform = T.Sequential(
@@ -38,14 +48,21 @@ def read_imdb(path='./data', is_train=True):
                 labels.append(1 if label == 'pos' else 0)
     return data, labels
 
-def plot_training_curve(train_losses):
+def plot_training_curve(train_losses, valid_accuracies):
+    assert len(train_losses)==len(valid_accuracies), "train_losses and valid_accuracies must have the same length"
+    epochs = len(train_losses)
     plt.figure(figsize=(10, 6))
-    plt.plot(train_losses, label='Training Loss')
+    # Plot training loss
+    plt.plot(range(1, epochs + 1), train_losses, label='Training Loss', marker='o')
+    # Plot validation accuracy
+    plt.plot(range(1, epochs + 1), valid_accuracies, label='Validation Accuracy', marker='o')
+
     plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Training Loss Curve')
+    plt.ylabel('Loss / Accuracy')
+    plt.title('Training Loss and Validation Accuracy Curve')
     plt.legend()
     plt.show()
+    plt.savefig('figs/Train_loss&Valid_acc.jpg', dpi=500)
 
 def plot_confusion_matrix(y_true, y_pred, classes):
     cm = confusion_matrix(y_true, y_pred)
@@ -57,6 +74,7 @@ def plot_confusion_matrix(y_true, y_pred, classes):
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.show()
+    plt.savefig('figs/Confusion_matrix.jpg', dpi=500)
 
 def plot_roc_curve(y_true, y_scores):
     fpr, tpr, _ = roc_curve(y_true, y_scores)
@@ -70,8 +88,12 @@ def plot_roc_curve(y_true, y_scores):
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend()
     plt.show()
+    plt.savefig('figs/Roc_curve.jpg', dpi=500)
 
 def report(y_true, y_pred):
     print(f"F1 Score: {f1_score(y_true, y_pred):.4f}")
     print(f"Recall: {recall_score(y_true, y_pred):.4f}")
     print(f"Precision: {precision_score(y_true, y_pred):.4f}")
+
+if __name__ == '__main__':
+    load_data()
