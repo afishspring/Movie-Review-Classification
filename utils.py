@@ -61,10 +61,11 @@ def plot_training_curve(train_losses, valid_accuracies):
     plt.ylabel('Loss / Accuracy')
     plt.title('Training Loss and Validation Accuracy Curve')
     plt.legend()
-    plt.show()
     plt.savefig('figs/Train_loss&Valid_acc.jpg', dpi=500)
+    plt.show()
 
 def plot_confusion_matrix(y_true, y_pred, classes):
+    plt.cla()
     cm = confusion_matrix(y_true, y_pred)
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title('Confusion Matrix')
@@ -73,10 +74,11 @@ def plot_confusion_matrix(y_true, y_pred, classes):
     plt.yticks(range(len(classes)), classes)
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
-    plt.show()
     plt.savefig('figs/Confusion_matrix.jpg', dpi=500)
+    plt.show()
 
 def plot_roc_curve(y_true, y_scores):
+    plt.cla()
     fpr, tpr, _ = roc_curve(y_true, y_scores)
     roc_auc = auc(fpr, tpr)
 
@@ -87,8 +89,8 @@ def plot_roc_curve(y_true, y_scores):
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend()
-    plt.show()
     plt.savefig('figs/Roc_curve.jpg', dpi=500)
+    plt.show()
 
 def report(y_true, y_pred):
     print(f"F1 Score: {f1_score(y_true, y_pred):.4f}")

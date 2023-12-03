@@ -45,7 +45,7 @@ def train():
             optimizer.zero_grad()
             pred = model(X)
             loss = criterion(pred, y)
-            train_loss += loss.cpu()
+            train_loss += loss.cpu().item()
             correct += (pred.argmax(1) == y).sum().int().cpu()
             loss.backward()
             optimizer.step()
@@ -54,7 +54,7 @@ def train():
         
         train_acc = correct / len(train_loader.dataset)
 
-        avg_train_loss = train_loss / len(train_loader.dataset)
+        avg_train_loss = train_loss / len(train_loader)
         train_losses.append(avg_train_loss)
 
         # evaluation
@@ -65,10 +65,10 @@ def train():
             for X, y in valid_loader:
                 X, y = X.to(device), y.to(device)
                 pred = model(X)
-                valid_loss += criterion(pred, y).cpu()
+                valid_loss += criterion(pred, y).cpu().item()
                 correct += (pred.argmax(1) == y).sum().int().cpu()
             
-            avg_valid_loss = valid_loss/ len(valid_loader.dataset)
+            avg_valid_loss = valid_loss/ len(valid_loader)
             
             valid_acc = correct / len(valid_loader.dataset)  
             valid_accuracies.append(valid_acc)
@@ -118,5 +118,5 @@ def test():
     report(y_true, y_pred)
 
 if __name__ == '__main__':
-    train()
+    # train()
     test()
