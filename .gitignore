@@ -10,6 +10,7 @@ __pycache__/
 nohup.out
 logs/
 .Python
+.vector_cache/
 bert-base-uncased/
 data/
 build/

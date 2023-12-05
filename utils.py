@@ -1,7 +1,8 @@
 import os
 import torch
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, roc_curve, auc, f1_score, recall_score, precision_score
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, roc_curve, auc, classification_report
 from torchtext.data import get_tokenizer
 from torchtext import transforms as T
 from torchtext.vocab import build_vocab_from_iterator
@@ -17,9 +18,9 @@ def load_data(batch_size):
     test_data = build_dataset(reviews_test, labels_test, vocab)
 
     # 将数据集分割成训练集和验证集
-    train_size = int(0.8 * len(train_data))
-    valid_size = len(train_data) - train_size
-    train_data, valid_data = torch.utils.data.random_split(train_data, [train_size, valid_size])
+    test_size = int(0.5 * len(test_data))
+    valid_size = len(test_data) - test_size
+    test_data, valid_data = torch.utils.data.random_split(test_data, [test_size, valid_size])
 
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True)
@@ -48,54 +49,38 @@ def read_imdb(path='./data', is_train=True):
                 labels.append(1 if label == 'pos' else 0)
     return data, labels
 
-def plot_training_curve(train_losses, valid_accuracies):
-    assert len(train_losses)==len(valid_accuracies), "train_losses and valid_accuracies must have the same length"
-    epochs = len(train_losses)
-    plt.figure(figsize=(10, 6))
-    # Plot training loss
-    plt.plot(range(1, epochs + 1), train_losses, label='Training Loss', marker='o')
-    # Plot validation accuracy
-    plt.plot(range(1, epochs + 1), valid_accuracies, label='Validation Accuracy', marker='o')
 
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss / Accuracy')
-    plt.title('Training Loss and Validation Accuracy Curve')
-    plt.legend()
-    plt.savefig('figs/Train_loss&Valid_acc.jpg', dpi=500)
-    plt.show()
-
-def plot_confusion_matrix(y_true, y_pred, classes):
+def plot_confusion_matrix(model_name, y_true, y_pred):
     plt.cla()
     cm = confusion_matrix(y_true, y_pred)
-    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.figure(figsize=(8, 8))
+    sns.set(style="darkgrid")
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
     plt.title('Confusion Matrix')
-    plt.colorbar()
-    plt.xticks(range(len(classes)), classes)
-    plt.yticks(range(len(classes)), classes)
-    plt.xlabel('Predicted Label')
-    plt.ylabel('True Label')
-    plt.savefig('figs/Confusion_matrix.jpg', dpi=500)
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.savefig('figs/'+model_name+'_Confusion_matrix.jpg', dpi=500)
     plt.show()
 
-def plot_roc_curve(y_true, y_scores):
+def plot_roc_curve(model_name, y_true, y_scores):
     plt.cla()
     fpr, tpr, _ = roc_curve(y_true, y_scores)
     roc_auc = auc(fpr, tpr)
 
     plt.figure(figsize=(10, 6))
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+    sns.lineplot(x=fpr, y=tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('Receiver Operating Characteristic (ROC) Curve')
     plt.legend()
-    plt.savefig('figs/Roc_curve.jpg', dpi=500)
+    plt.savefig('figs/'+model_name+'_Roc_curve.jpg', dpi=500)
     plt.show()
 
-def report(y_true, y_pred):
-    print(f"F1 Score: {f1_score(y_true, y_pred):.4f}")
-    print(f"Recall: {recall_score(y_true, y_pred):.4f}")
-    print(f"Precision: {precision_score(y_true, y_pred):.4f}")
+def report(model_name, y_true, y_pred):
+    report = classification_report(y_true, y_pred)
+    print(model_name+"-Classification Report:")
+    print(report)
 
 if __name__ == '__main__':
     load_data()

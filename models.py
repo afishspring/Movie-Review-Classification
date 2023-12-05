@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 from torchtext.vocab import GloVe
 
-
 class BiLSTM(nn.Module):
     def __init__(self, vocab, embed_size=100, hidden_size=256, num_layers=2, dropout=0.1, use_glove=False):
         super().__init__()
@@ -18,7 +17,7 @@ class BiLSTM(nn.Module):
             glove = GloVe(name="6B", dim=100)
             self.embedding = nn.Embedding.from_pretrained(glove.get_vecs_by_tokens(vocab.get_itos()),
                                                           padding_idx=vocab['<pad>'],
-                                                          freeze=True)
+                                                          freeze=False)
 
     def forward(self, x):
         x = self.embedding(x).transpose(0, 1)
@@ -30,3 +29,19 @@ class BiLSTM(nn.Module):
         for p in self.parameters():
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
+    
+    def freeze_layers(self, n):
+        # 冻结模型的前几层
+        for i, (name, param) in enumerate(self.named_parameters()):
+            print(i,name)
+            if i < n:
+                param.requires_grad = False
+    
+    def unfreeze_layers(self, n):
+        # 解冻模型的最后n层（包括解码层）
+        for param in self.embedding.parameters():
+            param.requires_grad = True
+        for param in self.rnn.parameters():
+            param.requires_grad = True
+        for param in self.fc.parameters():
+            param.requires_grad = True
