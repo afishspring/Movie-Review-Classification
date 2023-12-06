@@ -18,11 +18,13 @@ parser.add_argument('--freeze', type=bool, default=False, help='freeze layer')
 args = parser.parse_args()
 
 train_loader, valid_loader, test_loader, vocab = load_data(args.batch_size)
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-model_name = 'Glove_LSTM'
+device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+model_name = 'LSTM'
+# model_name = 'Glove_LSTM'
+# model_name = 'Freeze_LSTM'
+# model_name = 'Freeze_Glove_LSTM'
 model_savePath='pth/' + model_name + '.pth'
-model = BiLSTM(vocab, use_glove=True).to(device)
+model = BiLSTM(vocab, use_glove=False).to(device)
 # state_dict = torch.load('pth/LSTM.pth')
 # model.load_state_dict(state_dict['model'])
 # for param in model.embedding.parameters():
